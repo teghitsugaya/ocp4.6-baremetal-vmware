@@ -487,7 +487,7 @@
    watch oc get nodes
    watch oc get clusterversion
    watch oc get clusteroperators
-   ``
+   ```
    
 ## Configure storage for the Image Registry
 
