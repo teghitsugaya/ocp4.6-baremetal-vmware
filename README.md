@@ -599,5 +599,5 @@
    oc edit schedulers.config.openshift.io cluster
    ```
 
-1. Reference:
+## Reference:
    - https://www.youtube.com/watch?v=d03xg2PKOPg
