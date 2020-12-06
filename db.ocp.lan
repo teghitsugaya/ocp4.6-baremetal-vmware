@@ -1,0 +1,41 @@
+$TTL    604800
+@       IN      SOA     helper.ocp-dev.datacomm.co.id. root.helper.ocp-dev.datacomm.co.id. (
+                  1     ; Serial
+             604800     ; Refresh
+              86400     ; Retry
+            2419200     ; Expire
+             604800     ; Minimum
+)
+        IN      NS      helper.ocp-dev.datacomm.co.id.
+
+helper.ocp-dev.datacomm.co.id.        IN      A      10.19.15.3
+
+; Temp Bootstrap Node
+bootstrap.ocp-dev.datacomm.co.id.        IN      A      10.19.15.200
+
+; Control Plane Nodes
+master01.ocp-dev.datacomm.co.id.         IN      A      10.19.15.201
+master02.ocp-dev.datacomm.co.id.         IN      A      10.19.15.202
+master03.ocp-dev.datacomm.co.id.         IN      A      10.19.15.203
+
+; Worker Nodes
+worker01.ocp-dev.datacomm.co.id.        IN      A      10.19.15.211
+worker02.ocp-dev.datacomm.co.id.        IN      A      10.19.15.212
+
+; OpenShift Internal - Load balancer
+api.cluster-jkt01.ocp-dev.datacomm.co.id.        IN    A    10.19.15.3
+api-int.cluster-jkt01.ocp-dev.datacomm.co.id.    IN    A    10.19.15.3
+*.apps.cluster-jkt01.ocp-dev.datacomm.co.id.     IN    A    10.19.15.3
+
+; ETCD Cluster
+etcd-0.cluster-jkt01.ocp-dev.datacomm.co.id.    IN    A     10.19.15.201
+etcd-1.cluster-jkt01.ocp-dev.datacomm.co.id.    IN    A     10.19.15.202
+etcd-2.cluster-jkt01.ocp-dev.datacomm.co.id.    IN    A     10.19.15.203
+
+; OpenShift Internal SRV records (cluster name = cluster-jkt01)
+_etcd-server-ssl._tcp.cluster-jkt01.ocp-dev.datacomm.co.id.    86400     IN    SRV     0    10    2380    etcd-0.cluster-jkt01
+_etcd-server-ssl._tcp.cluster-jkt01.ocp-dev.datacomm.co.id.    86400     IN    SRV     0    10    2380    etcd-1.cluster-jkt01
+_etcd-server-ssl._tcp.cluster-jkt01.ocp-dev.datacomm.co.id.    86400     IN    SRV     0    10    2380    etcd-2.cluster-jkt01
+
+oauth-openshift.apps.cluster-jkt01.ocp-dev.datacomm.co.id.               IN     A     10.19.15.3
+console-openshift-console.apps.cluster-jkt01.ocp-dev.datacomm.co.id.     IN     A     10.19.15.3

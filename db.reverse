@@ -1,0 +1,23 @@
+$TTL    604800
+@       IN      SOA     helper.ocp-dev.datacomm.co.id. root.ocp-dev.datacomm.co.id (
+                  1     ; Serial
+             604800     ; Refresh
+              86400     ; Retry
+            2419200     ; Expire
+             604800     ; Minimum
+)
+
+  IN      NS      helper.ocp-dev.datacomm.co.id.
+
+3      IN    PTR    helper.ocp-dev.datacomm.co.id.
+3      IN    PTR    api.cluster-jkt01.ocp-dev.datacomm.co.id.
+3      IN    PTR    api-int.cluster-jkt01.ocp-dev.datacomm.co.id.
+;
+200    IN    PTR    bootstrap.ocp-dev.datacomm.co.id
+;
+201    IN    PTR    master01.ocp-dev.datacomm.co.id.
+202    IN    PTR    master02.ocp-dev.datacomm.co.id.
+203    IN    PTR    master03.ocp-dev.datacomm.co.id.
+;
+211    IN    PTR    worker01.ocp-dev.datacomm.co.id.
+212    IN    PTR    worker02.ocp-dev.datacomm.co.id.
