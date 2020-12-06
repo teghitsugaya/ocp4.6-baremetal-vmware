@@ -20,8 +20,8 @@
 
 ![Architecture Diagram](Architecture.png)
 
-## Download Software
 
+## Download Software
 1. Download [CentOS 8 x86_64 image](https://www.centos.org/centos-linux/)
 1. Login to [RedHat OpenShift Cluster Manager](https://cloud.redhat.com/openshift)
 1. Select 'Create Cluster' from the 'Clusters' navigation menu
@@ -31,70 +31,68 @@
 
    - Openshift Installer for Linux
    - Pull secret
-   - Command Line Interface for Linux and your workstations OS
+   - Command Line Interface 
    - Red Hat Enterprise Linux CoreOS (RHCOS)
-     - rhcos-X.X.X-x86_64-metal.x86_64.raw.gz
      - rhcos-X.X.X-x86_64-installer.x86_64.iso
 
-## Prepare the 'Bare Metal' environment
-
+## Prepare the 'Bare Metal' environmen
 > VMware ESXi used in this guide
 
-1. Copy the CentOS 8 iso to an ESXi datastore
+1. Copy the CentOS 8 and rhcos-installer.x86_64 iso to an ESXi datastore
 1. Create a new Port Group called 'OCP' under Networking
 1. Create 3 Control Plane virtual machines with minimum settings:
-   - Name: ocp-cp-# (Example ocp-cp-1)
+   - Name: master01.ocp-dev.datacomm.co.id
    - 4vcpu
-   - 8GB RAM
-   - 50GB HDD
-   - NIC connected to the OCP network
+   - 16GB RAM
+   - 120GB HDD
+   - NIC connected to the OCP network (DHCP)
    - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
 1. Create 2 Worker virtual machines (or more if you want) with minimum settings:
-   - Name: ocp-w-# (Example ocp-w-1)
-   - 4vcpu
+   - Name: worker01.ocp-dev.datacomm.co.id
+   - 2vcpu
    - 8GB RAM
-   - 50GB HDD
-   - NIC connected to the OCP network
+   - 120GB HDD
+   - NIC connected to the OCP network (DHCP)
    - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
 1. Create a Bootstrap virtual machine (this vm will be deleted once installation completes) with minimum settings:
-   - Name: ocp-boostrap
+   - Name: bootstrap.ocp-dev.datacomm.co.id
    - 4vcpu
    - 8GB RAM
-   - 50GB HDD
-   - NIC connected to the OCP network
-   - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
-1. Create a Services virtual machine with minimum settings:
-   - Name: ocp-svc
-   - 4vcpu
-   - 4GB RAM
    - 120GB HDD
-   - NIC1 connected to the VM Network (LAN)
-   - NIC2 connected to the OCP network
+   - NIC connected to the OCP network (DHCP)
+   - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
+1. Create a helper virtual machine with minimum settings:
+   - Name: helper.ocp-dev.datacomm.co.id
+   - 4vcpu
+   - 8GB RAM
+   - 120GB HDD1
+   - 120GB HDD2
+   - NIC1 connected to the OCP network (NAT Point to Point IP public) 10.19.15.3
    - Load the CentOS_8.iso image into the CD/DVD drive
 1. Boot all virtual machines so they each are assigned a MAC address
-1. Shut down all virtual machines except for 'ocp-svc'
+1. Shut down all virtual machines except for 'helper.ocp-dev.datacomm.co.id'
 1. Use the VMware ESXi dashboard to record the MAC address of each vm, these will be used later to set static IPs
+
 
 ## Configure Environmental Services
 
-1. Install CentOS8 on the ocp-svc host
-
+1. Install CentOS8 on the helper.ocp-dev.datacomm.co.id host
    - Remove the home dir partition and assign all free storage to '/'
-   - Optionally you can install the 'Guest Tools' package to have monitoring and reporting in the VMware ESXi dashboard
-   - Enable the LAN NIC only to obtain a DHCP address from the LAN network and make note of the IP address (ocp-svc_IP_address) assigned to the vm
+   - Set Static IP addreess 10.19.15.3 to NIC 1
+   - DNS1 Server 127.0.0.1
+   - DNS2 Server 8.8.8.8
+1. Boot the helper.ocp-dev.datacomm.co.id VM
 
-1. Boot the ocp-svc VM
-
-1. Move the files downloaded from the RedHat Cluster Manager site to the ocp-svc node
+1. Move the files downloaded from the RedHat Cluster Manager site to the helper.ocp-dev.datacomm.co.id node
 
    ```bash
-   scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz ~/Downloads/rhcos-x.x.x-x86_64-installer.x86_64.iso root@{ocp-svc_IP_address}:/root/
+   scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz  root@{helper.ocp-dev.datacomm.co.id_IP_address}:/root/
    ```
 
 1. SSH to the ocp-svc vm
 
    ```bash
-   ssh root@{ocp-svc_IP_address}
+   ssh root@{helper_IP_address}
    ```
 
 1. Extract Client tools and copy them to `/usr/local/bin`
@@ -122,19 +120,19 @@
    ```bash
    dnf update
    ```
-
+   
 1. Install Git
 
    ```bash
    dnf install git -y
    ```
 
-1. Download [config files](https://github.com/ryanhay/ocp4-metal-install) for each of the services
+1. Download [config files](https://github.com/teghitsugaya/ocp4.6-baremetal-vmware) for each of the services
 
    ```bash
    git clone https://github.com/ryanhay/ocp4-metal-install
    ```
-
+   
 1. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):
 
    ```bash
@@ -151,59 +149,6 @@
    export KUBE_EDITOR="vim"
    ```
 
-1. Set a Static IP for OCP network interface `nmtui-edit ens224` or edit `/etc/sysconfig/network-scripts/ifcfg-ens224`
-
-   - **Address**: 192.168.22.1
-   - **DNS Server**: 127.0.0.1
-   - **Search domain**: ocp.lan
-   - Never use this network for default route
-   - Automatically connect
-
-   > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens224` and `nmcli connection up ens224`
-
-1. Setup firewalld
-
-   Create **internal** and **external** zones
-
-   ```bash
-   nmcli connection modify ens224 connection.zone internal
-   nmcli connection modify ens192 connection.zone external
-   ```
-
-   View zones:
-
-   ```bash
-   firewall-cmd --get-active-zones
-   ```
-
-   Set masquerading (source-nat) on the both zones.
-
-   So to give a quick example of source-nat - for packets leaving the external interface, which in this case is ens192 - after they have been routed they will have their source address altered to the interface address of ens192 so that return packets can find their way back to this interface where the reverse will happen.
-
-   ```bash
-   firewall-cmd --zone=external --add-masquerade --permanent
-   firewall-cmd --zone=internal --add-masquerade --permanent
-   ```
-
-   Reload firewall config
-
-   ```bash
-   firewall-cmd --reload
-   ```
-
-   Check the current settings of each zone
-
-   ```bash
-   firewall-cmd --list-all --zone=internal
-   firewall-cmd --list-all --zone=external
-   ```
-
-   When masquerading is enabled so is ip forwarding which basically makes this host a router. Check:
-
-   ```bash
-   cat /proc/sys/net/ipv4/ip_forward
-   ```
-
 1. Install and configure BIND DNS
 
    Install
@@ -215,8 +160,8 @@
    Apply configuration
 
    ```bash
-   \cp ~/ocp4-metal-install/dns/named.conf /etc/named.conf
-   cp -R ~/ocp4-metal-install/dns/zones /etc/named/
+   cp ~/ocp4.6-baremetal-vmware/named.conf /etc/named.conf
+   cp -R ~/ocp4.6-baremetal-vmware/db* /var/named/.
    ```
 
    Configure the firewall for DNS
@@ -234,28 +179,12 @@
    systemctl status named
    ```
 
-   > At the moment DNS will still be pointing to the LAN DNS server. You can see this by testing with `dig ocp.lan`.
-
-   Change the LAN nic (ens192) to use 127.0.0.1 for DNS AND ensure `Ignore automatically Obtained DNS parameters` is ticked
-
-   ```bash
-   nmtui-edit ens192
-   ```
-
-   Restart Network Manager
-
-   ```bash
-   systemctl restart NetworkManager
-   ```
-
    Confirm dig now sees the correct DNS results by using the DNS Server running locally
 
    ```bash
-   dig ocp.lan
-   # The following should return the answer ocp-bootstrap.lab.ocp.lan from the local server
-   dig -x 192.168.22.200
+   dig -x 10.19.15.200
+   nslookup api.cluster-jkt01.ocp-dev.datacomm.co.id
    ```
-
 1. Install & configure DHCP
 
    Install the DHCP Server
@@ -267,7 +196,7 @@
    Edit dhcpd.conf from the cloned git repo to have the correct mac address for each host and copy the conf file to the correct location for the DHCP service to use
 
    ```bash
-   \cp ~/ocp4-metal-install/dhcpd.conf /etc/dhcp/dhcpd.conf
+   cp ~/ocp4.6-baremetal-vmware/dhcpd.conf /etc/dhcp/dhcpd.conf
    ```
 
    Configure the Firewall
@@ -331,7 +260,7 @@
    Copy HAProxy config
 
    ```bash
-   \cp ~/ocp4-metal-install/haproxy.cfg /etc/haproxy/haproxy.cfg
+   cp ~/ocp4.6-baremetal-vmware/haproxy.cfg /etc/haproxy/haproxy.cfg
    ```
 
    Configure the Firewall
@@ -380,7 +309,7 @@
    Export the Share
 
    ```bash
-   echo "/shares/registry  192.168.22.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
+   echo "/shares/registry  10.19.15.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
    exportfs -rv
    ```
 
@@ -405,7 +334,7 @@
 1. Generate an SSH key pair keeping all default options
 
    ```bash
-   ssh-keygen
+   ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa
    ```
 
 1. Create an install directory
@@ -417,17 +346,19 @@
 1. Copy the install-config.yaml included in the clones repository to the install directory
 
    ```bash
-   cp ~/ocp4-metal-install/install-config.yaml ~/ocp-install
+   cp ~/ocp4.6-baremetal-vmware/install-config.yaml ~/ocp-install
    ```
 
 1. Update the install-config.yaml with your own pull-secret and ssh key.
+  
+   ```bash
+   vim ~/ocp-install/install-config.yaml
+   ```
 
    - Line 23 should contain the contents of your pull-secret.txt
    - Line 24 should contain the contents of your '~/.ssh/id_rsa.pub'
 
-   ```bash
-   vim ~/ocp-install/install-config.yaml
-   ```
+ 
 
 1. Generate Kubernetes manifest files
 
@@ -445,30 +376,18 @@
    ~/openshift-install create ignition-configs --dir ~/ocp-install/
    ```
 
-1. Create a hosting directory to serve the configuration files for the OpenShift booting process
-
-   ```bash
-   mkdir /var/www/html/ocp4
-   ```
-
 1. Copy all generated install files to the new web server directory
 
    ```bash
-   cp -R ~/ocp-install/* /var/www/html/ocp4
-   ```
-
-1. Move the Core OS image to the web server directory (later you need to type this path multiple times so it is a good idea to shorten the name)
-
-   ```bash
-   mv ~/rhcos-X.X.X-x86_64-metal.x86_64.raw.gz /var/www/html/ocp4/rhcos
+   cp -R ~/ocp-install/* /var/www/html/
    ```
 
 1. Change ownership and permissions of the web server directory
 
    ```bash
-   chcon -R -t httpd_sys_content_t /var/www/html/ocp4/
-   chown -R apache: /var/www/html/ocp4/
-   chmod 755 /var/www/html/ocp4/
+   chcon -R -t httpd_sys_content_t /var/www/html/
+   chown -R apache: /var/www/html/
+   chmod 755 /var/www/html/
    ```
 
 1. Confirm you can see all files added to the `/var/www/html/ocp4/` dir through Apache
@@ -479,23 +398,23 @@
 
 ## Deploy OpenShift
 
-1. Power on the ocp-bootstrap host and ocp-cp-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+1. Power on the bootstrap and Master host Enter the following configuration:
 
    ```bash
-   # Bootstrap Node - ocp-bootstrap
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/bootstrap.ign
+   # Bootstrap Node
+   coreos-installer install --insecure-ignition --ignition-url=http://10.19.15.3:8080/bootstrap.ign/ /dev/sda
    ```
 
    ```bash
-   # Each of the Control Plane Nodes - ocp-cp-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/master.ign
+   # Each of the Control Plane Nodes
+   coreos-installer install --insecure-ignition --ignition-url=http://10.19.15.3:8080/master.ign/ /dev/sda
    ```
 
-1. Power on the ocp-w-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+1. Power on the worker hosts 
 
    ```bash
-   # Each of the Worker Nodes - ocp-w-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/worker.ign
+   # Each of the Worker Nodes 
+   coreos-installer install --insecure-ignition --ignition-url=http://10.19.15.3:8080/master.ign/ /dev/sda
    ```
 
 ## Monitor the Bootstrap Process
@@ -508,18 +427,21 @@
 
 1. Once bootstrapping is complete the ocp-boostrap node [can be removed](#remove-the-bootstrap-node)
 
+
+
 ## Remove the Bootstrap Node
 
-1. Remove all references to the `ocp-bootstrap` host from the `/etc/haproxy/haproxy.cfg` file
+1. Remove all references to the `bootstrap` host from the `/etc/haproxy/haproxy.cfg` file
 
    ```bash
-   # Two entries
    vim /etc/haproxy/haproxy.cfg
-   # Restart HAProxy - If you are still watching HAProxy stats console you will see that the ocp-boostrap host has been removed from the backends.
-   systemctl reload haproxy
+   #server      bootstrap.ocp-dev.datacomm.co.id 10.19.15.200:6443 check
+   #server      bootstrap.ocp-dev.datacomm.co.id 10.19.15.200:22623 check
+   systemctl restart haproxy
    ```
 
-1. The ocp-bootstrap host can now be safely shutdown and deleted from the VMware ESXi Console, the host is no longer required
+1. The bootstrap host can now be safely shutdown and deleted from the VMware ESXi Console, the host is no longer required
+
 
 ## Wait for installation to complete
 
@@ -562,9 +484,11 @@
    > This can take 5-10 minutes
 
    ```bash
-   watch -n5 oc get nodes
-   ```
-
+   watch oc get nodes
+   watch oc get clusterversion
+   watch oc get clusteroperators
+   ``
+   
 ## Configure storage for the Image Registry
 
 > A Bare Metal cluster does not by default provide storage so the Image Registry Operator bootstraps itself as 'Removed' so the installer can complete. As the installation has now completed storage can be added for the Registry and the operator updated to a 'Managed' state.
@@ -594,7 +518,7 @@
 1. Create the persistent volume for the 'image-registry-storage' pvc to bind to
 
    ```bash
-   oc create -f ~/ocp4-metal-install/manifest/registry-pv.yaml
+   oc create -f ~/ocp4.6-baremetal-vmware/manifest/registry-pv.yaml
    ```
 
 1. After a short wait the 'image-registry-storage' pvc should now be bound
@@ -607,16 +531,24 @@
 
 1. Apply the `oauth-htpasswd.yaml` file to the cluster
 
-   > This will create a user 'admin' with the password 'password'. To set a different username and password substitue the htpasswd key in the '~/ocp4-metal-install/manifest/oauth-htpasswd.yaml' file with the output of `htpasswd -n -B -b <username> <password>`
+   > This will create a user 'admin' with the password 'password'. To set a different username and password substitue the htpasswd key in the '~/ocp4.6-baremetal-vmware/manifest/oauth-htpasswd.yaml' file with the output of `htpasswd -n -B -b <username> <password>`
 
    ```bash
-   oc apply -f ~/ocp4-metal-install/manifest/oauth-htpasswd.yaml
+   oc apply -f ~/ocp4.6-baremetal-vmware/oauth-htpasswd.yaml
+ 
+   dnf -y install httpd-tools
+   htpasswd -c -B -b htpasswd admin password
+   htpasswd -B -b htpasswd teguh.imanto-datacomm password
+   cat htpasswd
+   oc create secret generic htpasswd-secret --from-file htpasswd=~/htpasswd -n openshift-config
+   oc extract secret/htpasswd-secret -n openshift-config --to - > temp
+   cat temp
    ```
-
 1. Assign the new user (admin) admin permissions
 
    ```bash
    oc adm policy add-cluster-role-to-user cluster-admin admin
+   oc adm policy add-cluster-role-to-user cluster-admin teguh.imanto-datacomm
    ```
 
 ## Access the OpenShift Console
@@ -637,7 +569,7 @@
    sudo vi /etc/hosts
 
    # Append the following entries:
-   192.168.0.96 ocp-svc api.lab.ocp.lan console-openshift-console.apps.lab.ocp.lan oauth-openshift.apps.lab.ocp.lan downloads-openshift-console.apps.lab.ocp.lan alertmanager-main-openshift-monitoring.apps.lab.ocp.lan grafana-openshift-monitoring.apps.lab.ocp.lan prometheus-k8s-openshift-monitoring.apps.lab.ocp.lan thanos-querier-openshift-monitoring.apps.lab.ocp.lan
+   156.0.100.6 helper helper.ocp-dev.datacomm.co.id api.cluster-jkt01.ocp-dev.datacomm.co.id console-openshift-console.apps.cluster-jkt01.ocp-dev.datacomm.co.id oauth-openshift.apps.cluster-jkt01.ocp-dev.datacomm.co.id downloads-openshift-console.apps.cluster-jkt01.ocp-dev.datacomm.co.id alertmanager-main-openshift-monitoring.apps.cluster-jkt01.ocp-dev.datacomm.co.id grafana-openshift-monitoring.apps.cluster-jkt01.ocp-dev.datacomm.co.id prometheus-k8s-openshift-monitoring.apps.cluster-jkt01.ocp-dev.datacomm.co.id thanos-querier-openshift-monitoring.apps.cluster-jkt01.ocp-dev.datacomm.co.id
    ```
 
 1. Navigate to the [OpenShift Console URL](https://console-openshift-console.apps.lab.ocp.lan) and log in as the 'admin' user
@@ -645,12 +577,14 @@
    > You will get self signed certificate warnings that you can ignore
    > If you need to login as kubeadmin and need to the password again you can retrieve it with: `cat ~/ocp-install/auth/kubeadmin-password`
 
+
+
 ## Troubleshooting
 
 1. You can collect logs from all cluster hosts by running the following command from the 'ocp-svc' host:
 
    ```bash
-   ./openshift-install gather bootstrap --dir ocp-install --bootstrap=192.168.22.200 --master=192.168.22.201 --master=192.168.22.202 --master=192.168.22.203
+   ./openshift-install gather bootstrap --dir ocp-install --bootstrap=10.19.15.200 --master=10.19.15.201 --master=10.19.15.202 --master=10.19.15.203
    ```
 
 1. Modify the role of the Control Plane Nodes
