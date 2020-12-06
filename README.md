@@ -562,7 +562,7 @@
 1. Append the following to your local workstations `/etc/hosts` file:
 
    > From your local workstation
-   > If you do not want to add an entry for each new service made available on OpenShift you can configure the ocp-svc DNS server to serve externally and create a wildcard entry for \*.apps.lab.ocp.lan
+   > If you do not want to add an entry for each new service made available on OpenShift you can configure the ocp-svc DNS server to serve externally and create a wildcard entry for \*.apps.cluster-jkt01.ocp-dev.datacomm.co.id
 
    ```bash
    # Open the hosts file
