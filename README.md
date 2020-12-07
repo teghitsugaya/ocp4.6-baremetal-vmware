@@ -633,4 +633,6 @@
    - Use the database information you previously created to complete the WordPress installation. Complete the information needed and click Install WordPress.
    - After successfully setting up WordPress, the login screen of WordPress opens. Use the user name and password set earlier and log in
    - From the WordPress dashboard, you can start building your own WordPress website.
-
+   
+1. reference:
+   - https://developer.ibm.com/languages/php/tutorials/build-deploy-wordpress-on-openshift/
