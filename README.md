@@ -529,7 +529,7 @@
    oc get pvc -n openshift-image-registry
    ```
 
-## Create the first Admin user
+## Create OAuth and Admin user
 
 1. Apply the `oauth-htpasswd.yaml` file to the cluster
 
