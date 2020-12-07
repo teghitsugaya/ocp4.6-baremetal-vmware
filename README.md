@@ -601,3 +601,34 @@
 
 ## Reference:
    - https://www.youtube.com/watch?v=d03xg2PKOPg
+
+## Testing APP
+1. Create a project to host your deployments and resources.
+
+   ```bash
+   oc new-project wordpress
+   ```
+1. First, you need to create the back-end database instance, which is in our case MariaDB. From the CMD/terminal, run the following command:
+   ```bash
+   oc new-app mariadb-ephemeral
+   ```
+   
+   - Note: MariaDB is not using persistent storage. So, any data stored is lost when pods are destroyed. Instead, you use a sample database in this tutorial for testing purposes.
+   - Take a note or your MariaDB-generated information: MariaDB connection user name, MariaDB connection password, and MariaDB database name. For the DB host, use mariadb.
+
+1. Because you are going to deploy WordPress, build your project on Apache with a PHP image.
+   ```bash
+   oc new-app php~https://github.com/wordpress/wordpress
+   ```
+
+1. expose service wordpress 
+    ```bash
+    oc expose svc/wordpress
+    oc get routes
+    ```
+1. Getting the URL and Access
+   - Copy the generated host name from your terminal and paste it in any browser. You should see the welcome screen of the deployed WordPress application.
+   - Use the database information you previously created to complete the WordPress installation. Complete the information needed and click Install WordPress.
+   - After successfully setting up WordPress, the login screen of WordPress opens. Use the user name and password set earlier and log in
+   - From the WordPress dashboard, you can start building your own WordPress website.
+
