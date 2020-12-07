@@ -15,6 +15,8 @@
   - [Create the first Admin user](#create-the-first-admin-user)
   - [Access the OpenShift Console](#access-the-openshift-console)
   - [Troubleshooting](#troubleshooting)
+  - [Testing APP] (#testing-app)
+
 
 ## Architecture Diagram
 
