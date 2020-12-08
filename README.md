@@ -579,7 +579,10 @@
    > You will get self signed certificate warnings that you can ignore
    > If you need to login as kubeadmin and need to the password again you can retrieve it with: `cat ~/ocp-install/auth/kubeadmin-password`
 
-
+1. Removing the kubeadmin user
+   ```bash
+   oc delete secrets kubeadmin -n kube-system
+   ```
 
 ## Troubleshooting
 
