@@ -546,6 +546,11 @@
    oc extract secret/htpasswd-secret -n openshift-config --to - > temp
    cat temp
    ```
+1. Update user
+    ```bash
+    oc create secret generic htpasswd-secret --from-file htpasswd=~/htpasswd  --dry-run -o yaml | oc replace -n openshift-config -f -
+    ```
+    
 1. Assign the new user (admin) admin permissions
 
    ```bash
