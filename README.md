@@ -179,6 +179,7 @@
    systemctl enable named
    systemctl start named
    systemctl status named
+   rndc reload
    ```
 
    Confirm dig now sees the correct DNS results by using the DNS Server running locally
