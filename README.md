@@ -102,7 +102,7 @@
    ```bash
    tar xvf openshift-client-linux.tar.gz
    mv oc kubectl /usr/local/bin
-   ```
+   ``` 
 
 1. Confirm Client Tools are working
 
@@ -110,7 +110,13 @@
    kubectl version
    oc version
    ```
-
+   
+1. Enabling tab completion
+   ```bash
+   oc completion bash > oc_bash_completion
+   sudo cp oc_bash_completion /etc/bash_completion.d/
+   ```
+   
 1. Extract the OpenShift Installer
 
    ```bash
