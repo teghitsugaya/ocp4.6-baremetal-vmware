@@ -434,6 +434,11 @@
    ~/openshift-install --dir ~/ocp-install wait-for bootstrap-complete --log-level=debug
    ```
 
+1. Monitor from HAproxy 
+   ```bash
+   floating_ip:9000/stats
+   ```
+
 1. Once bootstrapping is complete the ocp-boostrap node [can be removed](#remove-the-bootstrap-node)
 
 
