@@ -532,7 +532,7 @@
 1. Create the persistent volume for the 'image-registry-storage' pvc to bind to
 
    ```bash
-   oc create -f ~/ocp4.6-baremetal-vmware/manifest/registry-pv.yaml
+   oc create -f ~/ocp4.6-baremetal-vmware/registry-pv.yaml
    ```
 
 1. After a short wait the 'image-registry-storage' pvc should now be bound
